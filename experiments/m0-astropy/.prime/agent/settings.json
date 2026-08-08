@@ -1,0 +1,8 @@
+{
+	"autoRefine": {
+		"enabled": true,
+		"turnInterval": 1,
+		"cooldownMs": 0,
+		"compact": true
+	}
+}

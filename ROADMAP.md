@@ -2,7 +2,7 @@
 
 Capa operativa sobre [BACKGROUND.md](BACKGROUND.md). El background dice qué se sabe y por qué importa; este documento dice qué se hace, en qué orden y con qué criterio de cierre. Es un documento vivo: los milestones posteriores a M0 son borradores que se re-dimensionan con lo que M0 y M2 descubran.
 
-**Estado al 7/8/2026**: repo local, solo documentos. Sin GitHub todavía. prime-agent aún no clonado junto al repo.
+**Estado al 8/8/2026**: M0 cerrado (instrumento demostrado, ver abajo). Repo en GitHub (`lucaspecina/harness-refinement`, **público**). prime-agent y verifiers clonados y pineados. Próximo: M1.
 
 ---
 
@@ -33,6 +33,19 @@ Capa operativa sobre [BACKGROUND.md](BACKGROUND.md). El background dice qué se 
 - ¿Hace falta tocar prime-agent? → decisión de fork, con evidencia.
 
 **Criterio de cierre.** Dos continuaciones headless desde el mismo punto de fork con estados de harness distintos, corriendo hasta un checkpoint verificable, con logs completos; y `docs/instrument-notes.md` con veredicto explícito: *viable tal cual / viable con parches (→ fork) / hay que rediseñar el instrumento*.
+
+### ✅ CERRADO (8/8/2026) — veredicto: VIABLE TAL CUAL
+
+Se superó el criterio: 4 continuaciones (2 brazos × k=2) sobre una tarea SWE real, con outcome oficial. **No hace falta forkear prime-agent.** Ver `experiments/m0-astropy/manifest.yaml` y `docs/instrument-notes.md`.
+
+Respuestas a las preguntas que M0 debía contestar:
+- **Estado del mundo**: resuelto con mundo en contenedor + repo bind-mounteado desde el host (snapshot = copia de archivos). El kernel IPython lo serializa el propio prime-agent (`kernel-state.dill`) — pero es UNA foto, no una por turno (deuda de M1).
+- **Headless**: sí, `-p/--print` aguanta la tarea completa; `/refine` funciona sobre sesión retomada; el auto-refine corre pero su gate filtra tareas triviales.
+- **Modelo distinto en la continuación**: sí (verificado gpt-5.4 → gpt-5.1-codex-mini). El embudo chico→grande es viable.
+- **Costo/latencia**: corrida completa $0.15 / 14 turnos; continuación ~$0.15 y ~14 min (dominados por el verificador, no por el modelo).
+- **¿Hace falta tocar prime-agent?**: no.
+
+Resultado del primer contrafáctico: **Δ ≈ 0**, con explicación mecanicista (la nota era redundante con la conversación heredada). Aprendizaje que se lleva M2: **el punto de fork es una variable del estudio**, no un detalle de implementación.
 
 ---
 
@@ -93,5 +106,6 @@ Guardas no negociables (decididas en BACKGROUND §8): no-op permitido y premiabl
 | Decisión | Cuándo | Insumo |
 |---|---|---|
 | Proveedor y presupuesto para continuaciones (Azure vs. API directa; qué modelo abierto) | M0 → M2 | costos reales de M0 |
-| Crear GitHub repo + Project v2 + skill de tracking | cuando el roadmap esté firme | esta conversación |
-| Fork de prime-agent | cierre de M0 | veredicto de `instrument-notes.md` |
+| Crear Project v2 + skill de tracking (repo ya creado) | cuando M1 arranque | volumen de trabajo paralelo |
+| ~~Fork de prime-agent~~ | ~~cierre de M0~~ | **RESUELTO: no hace falta** |
+| Infra de cómputo para M1+: VM Linux x86 en Azure vs. sandboxes hosteados (Prime/Modal) | inicio de M1 | necesidad de snapshots del filesystem en momentos exactos |

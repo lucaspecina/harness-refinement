@@ -219,3 +219,14 @@ __marimo__/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Experimentos: lo pesado y regenerable queda fuera de git.
+# Las trayectorias (.jsonl) y el harness state SI se versionan: son el registro cientifico.
+experiments/*/testbed/
+experiments/*/snapshots/
+experiments/*/logs/
+experiments/*/prime-config/
+*.dill
+
+# Editor local
+.vscode/

@@ -1,0 +1,70 @@
+id: M0-001
+title: "De-risk del instrumento: fork contrafáctico sobre una tarea SWE real"
+issue: null  # sin GitHub Issues aún (ver ROADMAP §decisiones pendientes)
+date: 2026-08-07
+commit: 8199fc8cf55664b4ce6c0f5148e33943783460fd   # harness-refinement al iniciar
+prime_agent_commit: 10fb172b9298b353b27cddf3cd44bf386c9ba5d0
+verifiers_commit: 0a4d872f021022310a08ec213a25f4efb4a0244a
+research_environments_commit: b10db7640be3051650eef759e6ed80ddcadae220
+
+hypothesis: >
+  El mecanismo de fork de prime-agent (sesiones en árbol + harness state serializado)
+  puede usarse como instrumento de medición causal: cortar una sesión en el punto de un
+  refinement, correr una rama con la edición y otra sin ella, y medir Δ en el outcome
+  verificado. M0 no busca un Δ significativo (k=2 no alcanza), sino demostrar que el
+  flujo completo es ejecutable sin modificar prime-agent.
+
+setup:
+  tarea: "swe-bench/astropy__astropy-12907 (SWE-bench Verified vía Harbor)"
+  bug: "_cstack en astropy/modeling/separable.py: escribe 1s en vez de copiar la matriz right"
+  modelo: "gpt-5.4 (Azure OpenAI Responses)"
+  harness: "prime-agent 0.7.1 desde fuente, Node 22 standalone"
+  auto_refine: {enabled: true, turnInterval: 1, cooldownMs: 0, compact: true}
+  mundo: "contenedor Docker (imagen swebench prebuilt) + testbed bind-mounteado desde el host"
+  verificador: "test.sh oficial de Harbor en contenedor efímero; reward 0/1 + FAIL_TO_PASS/PASS_TO_PASS"
+  anti_contaminacion: "tests/config.json (contiene el parche dorado) nunca montado en el contenedor del agente"
+  punto_de_fork: "ref1 — primer refinement, mundo aún sin parche, hipótesis recién anotada"
+  ramas: "A (con nota) vs B (sin nota, entrada borrada del harness_state.json), k=2 cada una, intercaladas A1/B1/A2/B2"
+  reset_entre_ramas: "rsync -a --delete desde snapshots/ref1/testbed"
+
+results:
+  corrida_principal:
+    reward: 1
+    turnos: 14
+    refinements: 3
+    tokens: {input: 38980, output: 2085}
+    costo_usd: 0.152
+    parche: "idéntico al dorado (cright[...] = right), derivado por inspección de código"
+  forks:
+    A1: {nota: true,  reward: 1, segundos: 877, turnos_nuevos: 9}
+    A2: {nota: true,  reward: 1, segundos: 820, turnos_nuevos: 9}
+    B1: {nota: false, reward: 1, segundos: 892, turnos_nuevos: 10}
+    B2: {nota: false, reward: 1, segundos: 806, turnos_nuevos: 9}
+  delta: "≈ 0 en reward, turnos y tiempo"
+  costo_total_usd: ~0.80
+
+artifacts:
+  - sessions/                    # trayectoria de la corrida principal (con los 3 refinements)
+  - forks/sessions/              # las 4 continuaciones
+  - forks/session-artifacts/     # harness_state.json por rama (A con nota, B sin nota)
+  - forks/results.csv
+  - run_tests.sh, run_continuations.sh, PROMPT.md
+  - ../../tools/fork_session.mjs
+  # snapshots/ (200M) y testbed/ (96M) quedan fuera de git — regenerables
+
+conclusion: >
+  INSTRUMENTO VIABLE SIN MODIFICAR PRIME-AGENT. El flujo completo funciona: sesión headless
+  con auto-refine, snapshot del mundo por refinement, corte quirúrgico del JSONL, variante
+  del harness_state, continuación (incluso con otro modelo) y outcome oficial.
+  Δ ≈ 0 en este punto de fork, con explicación mecanicista: la hipótesis anotada también
+  vivía en la conversación heredada, así que borrar la nota no removió información. Es el
+  caso "la nota cristalizó algo ya sabido" de BACKGROUND §5, ahora con dato empírico.
+  Implicación de diseño para M2: el punto de fork es una variable del estudio — el valor de
+  una nota debería medirse donde el contexto se degrada (post-compactación, horizonte largo,
+  scope global entre sesiones), no donde es redundante con la conversación reciente.
+
+next: >
+  M1 — forker automatizado: aislación por rama (mundos independientes → paralelismo),
+  snapshot de kernel-state por punto de refine, verificación rápida (ver nota de performance
+  en docs/instrument-notes.md: el cuello es el pip install de test.sh, no la emulación),
+  y un solo comando fork-eval.

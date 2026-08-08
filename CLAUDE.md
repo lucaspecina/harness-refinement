@@ -25,5 +25,6 @@ Todo claim sobre Prime Agent / ARC / VISTA se etiqueta en uno de tres niveles: *
 
 ## Estado
 
-- **7/8/2026**: solo documentos, sin GitHub aún (la watchlist de ROADMAP migra a issues cuando exista). Próximo trabajo: M0 (de-risk del instrumento).
+- **8/8/2026**: **M0 cerrado — el instrumento de fork contrafáctico funciona sin modificar prime-agent** (ver `experiments/m0-astropy/manifest.yaml` y `docs/instrument-notes.md`). Repo en GitHub (**público**, sin Project v2 aún). Próximo trabajo: M1 (forker automatizado, paralelismo, infra de cómputo).
+- Receta local verificada: prime-agent desde fuente con Node 22 standalone (`~/.local/node22/`), modelos vía Azure (`AZURE_OPENAI_API_KEY` + `AZURE_OPENAI_BASE_URL`, provider `azure-openai-responses`), tareas SWE vía `verifiers` + Harbor. Detalles en `docs/instrument-notes.md`.
 - Idioma de trabajo: español. Workflow estándar: skill `dev-workflow` (presentar antes de commitear, etc.).
